@@ -1,89 +1,79 @@
-# TaskSpace - Mini Task Manager
+# Mini Task Manager (TaskSpace)
 
-TaskSpace is a minimalist, high-performance, and visually stunning web application built to manage daily tasks. It features a complete monorepo structure separating the Next.js frontend and Express backend, fully typed in TypeScript and styled with Tailwind CSS v4.
+This is a simple task manager web app built using **Next.js (App Router)**, **Express.js (TypeScript)**, and **MongoDB**. 
 
----
-
-## Key Tech Stack & Features
-
-- **Next.js 15 (App Router)**: Leverages Server and Client Components with optimized caching and routing.
-- **Tailwind CSS v4**: Implements native CSS-first configuration, resulting in faster load times and smoother compilation.
-- **Express + Node.js + Mongoose**: Clean REST API design with controllers, routes, validation schemas, and unified error middleware.
-- **Zero-Config MongoDB Fallback**: Connects to your configured MongoDB database via `MONGODB_URI`. If none is provided, the backend automatically spins up an in-memory database using `mongodb-memory-server`. This allows evaluation and local-first execution without installing MongoDB or running Docker containers.
-- **Optimistic UI Updates**: Toggling and deleting tasks trigger instant UI changes on the client side, falling back to the original state only if the network fails. This eliminates latency.
-- **Form Input Validation**: Detailed schema validation on both client (HTML5 + state boundaries) and backend (Zod schemas) rejecting invalid titles, empty strings, and long descriptions (400 Bad Request).
-- **Global Error Handling**: Centralized Express middleware that captures validation, database, and system errors, providing standardized JSON responses.
+It has a clean dark-mode interface and allows you to add tasks, view them, check them off as completed, and delete them.
 
 ---
 
-## Workspace Structure
+## What's Inside
+
+The project is split into a frontend and backend directory for clean separation of concerns:
+
+- **Frontend**: Next.js 15, TypeScript, Tailwind CSS v4, and Lucide icons.
+- **Backend**: Node.js, Express, Mongoose, and Zod for validating request data.
+- **Zero-Setup Database**: If you don't have MongoDB installed or running locally, the backend automatically spins up an in-memory database server (`mongodb-memory-server`). The app will work right out of the box without any database configuration.
+
+---
+
+## Project Structure
 
 ```text
 task-manager/
 ├── backend/
 │   ├── src/
 │   │   ├── config/db.ts         # Database connection & memory server setup
-│   │   ├── controllers/         # Handles business logic
-│   │   ├── middleware/          # Validation & error interceptors
-│   │   ├── models/              # Mongoose Schema
-│   │   ├── routes/              # Express Router mappings
-│   │   └── index.ts             # Server entry point
-│   ├── tsconfig.json
-│   └── package.json
+│   │   ├── controllers/         # Task CRUD logic
+│   │   ├── middleware/          # Zod validation & global error handlers
+│   │   ├── models/              # Mongoose Task Schema
+│   │   ├── routes/              # Express Router
+│   │   └── index.ts             # Express Server entry point
 ├── frontend/
 │   ├── src/
-│   │   ├── app/                 # Page Layouts, global CSS, Home
+│   │   ├── app/                 # Next.js App router (pages, layout, globals.css)
 │   │   ├── components/          # AddModal, ConfirmationModal, TaskCard, TaskList
-│   │   ├── services/api.ts      # Fetch client wrapper
+│   │   ├── services/api.ts      # Fetch API wrapper
 │   │   └── types/               # TypeScript interfaces
-│   ├── tsconfig.json
-│   └── package.json
-├── package.json                 # Monorepo scripts (concurrent dev environment)
-├── .gitignore                   # Ignores build outputs, node_modules, and secrets
-└── README.md                    # Project documentation (this file)
+└── package.json                 # Monorepo scripts to run everything together
 ```
 
 ---
 
-## Getting Started
+## How to Run It Local
 
 ### Prerequisites
-Make sure you have [Node.js (v18+)](https://nodejs.org/) installed.
+Make sure you have [Node.js](https://nodejs.org/) installed (v18 or higher is recommended).
 
-### 1. Installation
-In the root directory, install all workspace dependencies:
+### 1. Install dependencies
+Run this command in the root folder of the project to install all packages for both the frontend and backend:
 ```bash
 npm run install:all
 ```
-*(This script runs `npm install` in the root, `backend`, and `frontend` folders respectively).*
 
-### 2. Configure Environment Variables (Optional)
-If you have a local MongoDB instance or a MongoDB Atlas URI, configure it:
-- Create a `.env` file in the `backend/` folder:
-  ```env
-  PORT=5000
-  MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxx.mongodb.net/taskmanager
-  ```
-- *If left blank, the application will automatically spin up an in-memory MongoDB database.*
+### 2. Configure the Database (Optional)
+If you want to use your own local MongoDB instance or MongoDB Atlas:
+1. Create a `.env` file in the `backend/` directory.
+2. Add your connection string:
+   ```env
+   PORT=5000
+   MONGODB_URI=your_mongodb_uri_here
+   ```
+*If you leave `MONGODB_URI` blank, the app will run using the in-memory database fallback.*
 
-### 3. Run the Application
-Start both the Express API and Next.js frontend concurrently using a single command in the root folder:
+### 3. Start the servers
+Run the following command in the root directory:
 ```bash
 npm run dev
 ```
+This runs both the backend (on port 5000) and frontend (on port 3000) concurrently. 
 
-This starts:
-- **Express Backend** at [http://localhost:5000](http://localhost:5000)
-- **Next.js Frontend** at [http://localhost:3000](http://localhost:3000)
-
-Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
+Open **[http://localhost:3000](http://localhost:3000)** in your browser to view the app.
 
 ---
 
-## Architectural Decisions
+## Some Design Decisions
 
-1. **Monorepo Setup**: Choosing separate `frontend` and `backend` workspaces keeps the codebase modular. It prevents package pollution (e.g. keeping Mongoose out of Next.js modules) and guarantees that client and server run as independent processes, mirroring real-world distributed architectures.
-2. **TypeScript for Full-Stack Safety**: TypeScript interfaces (like `Task`) are mirrored on both client and server, keeping API payloads structured and eliminating typos during compile time.
-3. **No-Setup Developer Experience**: Integrating `mongodb-memory-server` resolves the database dependency barrier, meaning anyone can review and run the code with zero database setups.
-4. **Tailwind CSS v4**: Leveraging the CSS-first syntax in `@theme inline` keeps globals light and config-free, removing the classic `tailwind.config.js` bloat.
-5. **No Enterprise Bloat**: Kept authentication, user management, and notifications out to satisfy the minimalist scope and prioritize core developer fundamentals (Express middlewares, clean components, state flow).
+- **Monorepo setup**: Kept the frontend and backend in separate directories so their dependencies don't mix. It makes it cleaner to manage and deploy.
+- **Optimistic UI Updates**: When you click to complete or delete a task, the UI updates instantly without waiting for the server response. If the network call fails, it rolls back. This keeps the app feeling snappy.
+- **Zod for Validation**: Implemented strict schema validation on the backend using Zod. If a request has an empty title or invalid data, the backend returns a clear error message (400 Bad Request) which is shown on the frontend.
+- **Global Error Handling**: Express middleware catches any database or validation errors and returns a consistent JSON format instead of crashing the server.
